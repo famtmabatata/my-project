@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام تسجيل الحضور الذكي</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          // تم وضع مفتاحك العام هنا
+          emailjs.init("Y62WEgk07XllaOB-B");
+       })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2>تسجيل حضور الطلاب</h2>
+        <p>يرجى إدخال الرمز الخاص بك:</p>
+        <input type="number" id="studentID" placeholder="أدخل الرمز هنا...">
+        <button onclick="checkAttendance()">تسجيل الحضور</button>
+        <div id="message"></div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
