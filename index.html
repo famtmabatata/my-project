@@ -9,30 +9,63 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function(){
-          // تم وضع مفتاحك العام هنا
           emailjs.init("Y62WEgk07XllaOB-B");
        })();
     </script>
+
+    <style>
+        /* كود إضافي لضمان الترتيب في منتصف الشاشة */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6; /* لون خلفية هادئ */
+        }
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px; /* المسافة بين صندوق التسجيل وصندوق المعلومات */
+            width: 100%;
+            padding: 20px;
+        }
+        .info-box {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px; /* عرض مناسب للمعلومات */
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
 </head>
 <body>
 
-    <div style="background-color: #ffffff; padding: 20px; border-radius: 15px; margin: 20px auto; max-width: 500px; text-align: center; border: 1px solid #e0e0e0; box-shadow: 0 4px 10px rgba(0,0,0,0.05); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-        <h3 style="color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #4CAF50; padding-bottom: 8px; display: inline-block;">معلومات المشروع</h3>
-        
-        <div style="text-align: right; margin-top: 10px; line-height: 1.8;">
-            <p style="margin: 8px 0;"><strong>👤 إعداد الطالب:</strong> همام هاني</p>
-            <p style="margin: 8px 0;"><strong>👨‍🏫 بإشراف الأستاذ:</strong> [محمد علي العودات]</p>
-            <p style="margin: 8px 0;"><strong>🏫 المدرسة:</strong> [اسكان المالية والزراعة]</p>
-            <p style="margin: 8px 0;"><strong>📚 الصف:</strong> [التاسع(أ)]</p>
+    <div class="main-wrapper">
+        <div class="container" style="margin: 0;">
+            <h2>تسجيل حضور الطلاب</h2>
+            <p>يرجى إدخال الرمز الخاص بك:</p>
+            <input type="number" id="studentID" placeholder="أدخل الرمز هنا...">
+            <button onclick="checkAttendance()">تسجيل الحضور</button>
+            <div id="message"></div>
         </div>
-    </div>
 
-    <div class="container">
-        <h2>تسجيل حضور الطلاب</h2>
-        <p>يرجى إدخال الرمز الخاص بك:</p>
-        <input type="number" id="studentID" placeholder="أدخل الرمز هنا...">
-        <button onclick="checkAttendance()">تسجيل الحضور</button>
-        <div id="message"></div>
+        <div class="info-box">
+            <h3 style="color: #2c3e50; margin-bottom: 15px; border-bottom: 2px solid #4CAF50; padding-bottom: 8px; display: inline-block;">معلومات المشروع</h3>
+            
+            <div style="text-align: right; line-height: 1.8;">
+                <p style="margin: 8px 0;"><strong>👤 إعداد الطالب:</strong> همام هاني</p>
+                <p style="margin: 8px 0;"><strong>👨‍🏫 بإشراف الأستاذ:</strong> محمد علي العودات</p>
+                <p style="margin: 8px 0;"><strong>🏫 المدرسة:</strong> اسكان المالية والزراعة</p>
+                <p style="margin: 8px 0;"><strong>📚 الصف:</strong> التاسع (أ)</p>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>
