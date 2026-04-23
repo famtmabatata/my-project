@@ -1,0 +1,405 @@
+:root { 
+    --primary-dark: #0f4c5c; 
+    --primary-light: #38b2ac; 
+    --accent-color: #e9c46a; 
+    --table-header: #2c7da0; 
+    --bg-light: #f4f9f9;
+    --white-card: #ffffff;
+}
+
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    direction: rtl; 
+    background: var(--bg-light); 
+}
+
+.hidden { display: none !important; }
+
+#main-system { 
+    display: grid; 
+    grid-template-columns: 260px 1fr; 
+    height: 100vh; 
+    transition: grid-template-columns 0.3s ease;
+}
+
+#main-system.mini-sidebar {
+    grid-template-columns: 70px 1fr;
+}
+
+#main-system.mini-sidebar aside nav button span,
+#main-system.mini-sidebar aside .side-header h2,
+#main-system.mini-sidebar aside .side-header .user-role,
+#main-system.mini-sidebar aside .side-header .school-info-side,
+#main-system.mini-sidebar aside .side-header .principal-side,
+#main-system.mini-sidebar aside .side-header .school-logo-mini {
+    display: none;
+}
+
+#main-system.mini-sidebar aside nav button {
+    text-align: center;
+    padding: 12px 5px;
+}
+
+.hamburger-menu {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.hamburger-menu span {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+aside { 
+    background: var(--primary-dark); 
+    color: white; 
+    padding: 25px; 
+    text-align: center; 
+    overflow: hidden;
+    white-space: nowrap;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.05);
+}
+
+#user-pfp-container img { 
+    width: 90px; 
+    height: 90px; 
+    border-radius: 50%; 
+    margin-bottom: 15px; 
+    border: 3px solid var(--primary-light); 
+    cursor: pointer;
+    transition: 0.3s;
+}
+#user-pfp-container img:hover { filter: brightness(0.85); }
+
+.user-role {
+    font-size: 0.8rem;
+    background: rgba(255,255,255,0.2);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: 5px;
+    margin-bottom: 8px;
+}
+
+.school-info-side {
+    font-size: 0.75rem;
+    opacity: 0.9;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+.principal-side {
+    font-size: 0.7rem;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+aside nav button { 
+    width: 100%; 
+    padding: 14px; 
+    margin-bottom: 10px; 
+    background: rgba(255,255,255,0.1); 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    text-align: right; 
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: 0.2s;
+}
+
+aside nav button:hover { background: var(--primary-light); }
+
+#login-page { 
+    height: 100vh; 
+    background: linear-gradient(135deg, #0f4c5c 0%, #1b6b7c 100%);
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+}
+
+.login-container { 
+    text-align: center; 
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.login-card {
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(2px);
+    padding: 2rem 2rem 2rem 2rem;
+    border-radius: 32px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 25px 45px rgba(0,0,0,0.2);
+    transition: 0.3s;
+}
+
+/* شعار صفحة الدخول */
+.school-logo {
+    width: 160px;
+    margin: 0 auto 15px auto;
+}
+.school-logo img {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: white;
+    padding: 4px;
+}
+
+/* شعار الشريط الجانبي */
+.school-logo-mini {
+    width: 80px;
+    margin: 0 auto 10px auto;
+}
+.school-logo-mini img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: white;
+    padding: 2px;
+}
+
+.login-title { 
+    color: var(--primary-dark); 
+    font-size: 1.7rem; 
+    margin-bottom: 0.5rem; 
+    font-weight: 700;
+    border-bottom: 2px solid var(--primary-light);
+    display: inline-block;
+    padding-bottom: 8px;
+}
+
+.principal-name {
+    color: #2c5a6e;
+    font-size: 1rem;
+    margin: 12px 0 20px 0;
+    font-weight: 500;
+    background: #eef2f5;
+    display: inline-block;
+    padding: 5px 15px;
+    border-radius: 40px;
+}
+
+.login-inputs { 
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.login-inputs input { 
+    border: 1px solid #cfdee9;
+    padding: 14px 18px;
+    border-radius: 60px;
+    font-size: 1rem;
+    outline: none;
+    background: #fefefe;
+    transition: 0.2s;
+    text-align: right;
+}
+.login-inputs input:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(56,178,172,0.2);
+}
+
+.login-inputs button { 
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 60px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 5px;
+}
+.login-inputs button:hover { background: var(--primary-light); transform: translateY(-2px); }
+
+.login-footer {
+    margin-top: 25px;
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 15px;
+}
+
+header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 25px; 
+    background: white; 
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.card { 
+    background: var(--white-card); 
+    padding: 25px; 
+    border-radius: 20px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03); 
+    margin-bottom: 25px; 
+    border: 1px solid #eef2f5;
+}
+
+.main-table, table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+th, td { 
+    border: 1px solid #dce5ec; 
+    padding: 12px; 
+    text-align: center; 
+}
+
+th { background: var(--table-header); color: white; font-weight: 600; }
+
+.chat-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    height: calc(100vh - 80px);
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.chat-sidebar {
+    border-left: 1px solid #e2edf2;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.chat-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f4f8;
+    cursor: pointer;
+    transition: 0.15s;
+}
+.chat-item:hover { background: #eef6f5; }
+
+.chat-avatar {
+    width: 45px;
+    height: 45px;
+    background: #cbdde6;
+    border-radius: 50%;
+    margin-left: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.chat-main-area {
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+}
+
+#chat-header {
+    padding: 15px 20px;
+    background: var(--primary-dark);
+    color: white;
+    font-weight: bold;
+    border-bottom: 2px solid var(--accent-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #fefefe;
+}
+
+.message { margin-bottom: 16px; display: flex; flex-direction: column; }
+.message.sent { align-items: flex-start; }
+.message.received { align-items: flex-end; }
+
+.bubble {
+    padding: 10px 16px;
+    border-radius: 18px;
+    max-width: 75%;
+    font-size: 0.9rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.sent .bubble { 
+    background: var(--primary-dark); 
+    color: white; 
+    border-bottom-left-radius: 4px; 
+}
+
+.received .bubble { 
+    background: #ffffff; 
+    color: #1e2a3a; 
+    border: 1px solid #dce5ec;
+    border-bottom-right-radius: 4px;
+}
+
+.time { font-size: 10px; color: #94a3b8; margin-right: 8px; float: left; margin-top: 4px; }
+.sent .time { color: #cbd5e1; }
+
+.system-message {
+    text-align: center;
+    margin: 20px auto;
+    padding: 12px 18px;
+    background: #eef2f9;
+    border-radius: 28px;
+    font-size: 0.8rem;
+    color: #2d4a6e;
+}
+
+.chat-input-area {
+    padding: 15px;
+    background: #ffffff;
+    border-top: 1px solid #e2edf2;
+    display: flex;
+    gap: 12px;
+}
+.chat-input-area input {
+    flex: 1;
+    padding: 12px 18px;
+    border-radius: 40px;
+    border: 1px solid #cddfe8;
+    outline: none;
+}
+.chat-input-area button {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 0 28px;
+    border-radius: 40px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.chat-input-area button:hover { background: var(--primary-light); }
+
+.custom-admin-btn {
+    background: rgba(255,255,240,0.08);
+}
