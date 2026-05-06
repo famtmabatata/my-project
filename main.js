@@ -1,4 +1,4 @@
-// main.js - النسخة الكاملة مع تحسينات الحركة وتجميع الشات
+// main.js - إصدار مطور بشهادة PDF وإشعارات لحظية وتحرير بالمودال
 import { supabase } from "./supabase-config.js";
 import { hashPassword, verifyPassword } from "./auth.js";
 
@@ -102,13 +102,13 @@ const app = {
             ]);
 
             this.db.systemUsers = (users || []).map(u => ({
-  s: u.serial,
-  n: u.name,
-  r: u.role,
-  grade: u.grade,
-  c: u.class,
-  sub: u.subject
-}));
+                s: u.serial,
+                n: u.name,
+                r: u.role,
+                grade: u.grade,
+                c: u.class,
+                sub: u.subject
+            }));
             this.db.schedules = this.parseSchedules(schedules);
             this.db.teacherSchedules = this.parseTeacherSchedules(teacherSchedules);
             this.db.grades = this.parseGrades(grades);
@@ -149,7 +149,7 @@ const app = {
         const obj = {};
         if (rows) rows.forEach(r => {
             if (!obj[r.student_serial]) obj[r.student_serial] = {};
-            obj[r.student_serial][r.subject] = { m1: r.m1, m2: r.m2, m3: r.m3, fin: r.fin };
+            obj[r.student_serial][r.subject] = { m1: r.m1, m2: r.m2, m3: r.m3, m4: r.m4 || 0, fin: r.fin };
         });
         return obj;
     },
@@ -229,11 +229,11 @@ const app = {
         if (rows.length) await supabase.from('teacher_schedules').insert(rows);
     },
 
-    async upsertGrade(student_serial, subject, m1, m2, m3, fin) {
+    async upsertGrade(student_serial, subject, m1, m2, m3, m4, fin) {
         await supabase.from('grades').upsert(
-  { student_serial, subject, m1, m2, m3, fin },
-  { onConflict: 'student_serial,subject' }
-);
+            { student_serial, subject, m1, m2, m3, m4, fin },
+            { onConflict: 'student_serial,subject' }
+        );
     },
 
     async addHomework(grade, cls, teacher_name, title, content, subject, date) {
@@ -328,7 +328,6 @@ const app = {
         this.launch();
     },
 
-    // هزة بطاقة الدخول عند الخطأ
     shakeLoginCard() {
         const card = document.querySelector('.login-card');
         if (card) {
@@ -348,6 +347,7 @@ const app = {
         this.setupChatInputHandler();
         this.setupClearOnFocus();
         this.setupKeyboardShortcuts();
+        this.enableRealtime();   // تفعيل الإشعارات اللحظية
         window.addEventListener('resize', () => {
             if (window.innerWidth > 768) document.getElementById('sidebar')?.classList.remove('open');
         });
@@ -418,7 +418,7 @@ const app = {
             btn.onclick = () => app.switchTab(tab);
             nav.appendChild(btn);
         };
-        addBtn('📜', 'طباعة النتائج', 'admin-print-reports');
+        addBtn('📜', 'طباعة النتائج PDF', 'admin-print-reports');
         addBtn('📋', 'طباعة أسماء الطلاب', 'admin-print-names');
         addBtn('👨‍🏫', 'تعيين مربي الصفوف', 'admin-assign-teachers');
         addBtn('📚', 'مواد المعلمين', 'admin-teacher-subjects');
@@ -755,7 +755,7 @@ const app = {
 
     async editClassSub(grade, cls, day, period) {
         const current = this.db.schedules[grade][cls][day][period];
-        const newVal = prompt(`تعديل ${grade} ${cls} - ${day} حصة ${period.replace('p','')}:`, current);
+        const newVal = await this.showEditModal(`تعديل ${grade} ${cls} - ${day} حصة ${period.replace('p','')}`, current);
         if (newVal !== null) {
             this.db.schedules[grade][cls][day][period] = newVal.trim() === "" ? "-" : newVal;
             await supabase.from('schedules').upsert({ grade, class: cls, day, period, value: newVal.trim() === "" ? "-" : newVal });
@@ -784,13 +784,42 @@ const app = {
     },
 
     async editTeacherCell(teacherId, day, period) {
-        const current = this.db.teacherSchedules[teacherId][day][period];
-        const n = prompt(`الشعبة (أ,ب,ج,د,تج) أو - :`, current);
+        const current = this.db.teacherSchedules[teacherId]?.[day]?.[period] || '-';
+        const n = await this.showEditModal('الشعبة (أ,ب,ج,د,تج) أو -', current);
         if (n !== null) {
             this.db.teacherSchedules[teacherId][day][period] = n.trim() === "" ? "-" : n;
             await supabase.from('teacher_schedules').upsert({ teacher_id: teacherId, day, period, value: n.trim() === "" ? "-" : n });
             this.renderTeacherEditSchedule(teacherId);
         }
+    },
+
+    showEditModal(title, currentValue) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>${title}</h3>
+                    <input type="text" id="edit-input" value="${currentValue}" autofocus>
+                    <div style="margin-top:15px; display:flex; justify-content:center; gap:8px;">
+                        <button onclick="this.closest('.modal-overlay').resolve('ok')" class="btn-save">حفظ</button>
+                        <button onclick="this.closest('.modal-overlay').resolve('cancel')" class="btn-delete">إلغاء</button>
+                    </div>
+                </div>
+            `;
+            modal.resolve = (action) => {
+                if (action === 'ok') resolve(modal.querySelector('#edit-input').value);
+                else resolve(null);
+                modal.remove();
+            };
+            document.body.appendChild(modal);
+            modal.querySelector('#edit-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') modal.resolve('ok');
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.resolve('cancel');
+            });
+        });
     },
 
     renderAssignTeachersTab() {
@@ -824,7 +853,7 @@ const app = {
         const section = document.getElementById('tab-admin-print-reports');
         if (!section) return;
         const grades = Object.keys(this.gradesConfig).map(g => `<option value="${g}">${g}</option>`).join('');
-        section.innerHTML = `<div class="card"><h3>طباعة النتائج</h3><select id="report-grade-select">${grades}</select><select id="report-class-select"></select><button onclick="app.printStudentReports()">طباعة</button></div>`;
+        section.innerHTML = `<div class="card"><h3>طباعة النتائج PDF</h3><select id="report-grade-select">${grades}</select><select id="report-class-select"></select><button onclick="app.printStudentReports()">تصدير الشهادات</button></div>`;
         document.getElementById('report-grade-select').onchange = function() {
             document.getElementById('report-class-select').innerHTML = (app.gradesConfig[this.value] || []).map(c => `<option value="${c}">${c}</option>`).join('');
         };
@@ -865,38 +894,108 @@ const app = {
         XLSX.writeFile(wb, `طلاب_${grade}_${cls}.xlsx`);
     },
 
-    printStudentReports() {
+    // ========== طباعة الشهادات الجديدة (PDF) ==========
+    async printStudentReports() {
         const grade = document.getElementById('report-grade-select')?.value;
         const cls = document.getElementById('report-class-select')?.value;
         if (!grade || !cls) return this.showToast("اختر الصف", "warning");
         const students = this.db.systemUsers.filter(u => u.r === 'student' && u.grade === grade && u.c === cls);
         if (!students.length) { this.showToast("لا يوجد طلاب.", "info"); return; }
-        let html = '';
-        students.forEach(student => {
-            const grades = this.db.grades[student.s] || {};
-            let subjects = [], totalSum = 0;
-            for (let sub in grades) {
-                const g = grades[sub];
-                const t = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.fin)||0);
-                totalSum += t;
-                subjects.push({ name: sub, m1: g.m1, m2: g.m2, m3: g.m3, fin: g.fin, total: t });
-            }
-            const percentage = subjects.length ? (totalSum/(subjects.length*100)*100).toFixed(1) : 0;
-            const teacherId = this.db.classTeachers[grade]?.[cls];
-            const teacher = teacherId ? this.db.systemUsers.find(u=>u.s===teacherId) : null;
-            const teacherName = teacher ? teacher.n : "________________";
-            html += `<div style="page-break-after: always; padding:20px; border:2px solid #000; margin:20px auto; max-width:800px;">
-                        <div style="text-align:center;"><h2>مدرسة اسكان المالية والزراعة</h2><h3>مدير المدرسة: د/ أسامة حمدان الرقب</h3><h3>كشف العلامات - الفصل الثاني</h3><p>العام الدراسي 2025/2026</p></div>
-                        <div style="display:flex; justify-content:space-between;"><p><b>اسم الطالب:</b> ${student.n}</p><p><b>الصف:</b> ${grade}</p><p><b>الشعبة:</b> ${cls}</p></div>
-                        <table border="1" width="100%" cellpadding="5"><thead><tr><th>المادة</th><th>ش1</th><th>ش2</th><th>ش3</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>
-                        ${subjects.map(s=>`<tr><td>${s.name}</td><td>${s.m1||0}</td><td>${s.m2||0}</td><td>${s.m3||0}</td><td>${s.fin||0}</td><td style="font-weight:bold">${s.total}</td></tr>`).join('')}
-                        </tbody></table>
-                        <div style="margin-top:20px;text-align:center;"><p><b>المعدل التراكمي: ${percentage}%</b></p></div>
-                        <div style="display:flex; justify-content:space-between; margin-top:40px;"><div><p>${teacherName}</p><hr><small>توقيع مربي الصف</small></div><div><p>________________</p><hr><small>الخاتم الرسمي</small></div><div><p>________________</p><hr><small>توقيع ولي الأمر</small></div></div>
-                    </div>`;
-        });
-        const win = window.open('', '_blank');
-        if (win) { win.document.write(`<html dir="rtl"><head><title>نتائج ${grade} ${cls}</title></head><body>${html}</body></html>`); win.document.close(); win.print(); }
+        for (let student of students) {
+            await this.exportStudentReportPDF(student, grade, cls);
+        }
+        this.showToast("تم تحميل الشهادات", "success");
+    },
+
+    async exportStudentReportPDF(student, grade, cls) {
+        const grades = this.db.grades[student.s] || {};
+        let subjects = [];
+        let totalSum = 0, count = 0;
+        for (let sub in grades) {
+            const g = grades[sub];
+            const m1 = Number(g.m1)||0, m2 = Number(g.m2)||0, m3 = Number(g.m3)||0, m4 = Number(g.m4)||0;
+            const avg = ((m1+m2+m3+m4)/4).toFixed(1);
+            subjects.push({ name: sub, m1, m2, m3, m4, avg });
+            totalSum += parseFloat(avg);
+            count++;
+        }
+        const overallAvg = count ? (totalSum/count).toFixed(1) : 0;
+
+        const teacherId = this.db.classTeachers[grade]?.[cls];
+        const teacher = teacherId ? this.db.systemUsers.find(u=>u.s===teacherId) : null;
+        const teacherName = teacher ? teacher.n : "________________";
+
+        const html = `
+            <div class="report-card-pdf">
+                <div class="header">
+                    <img src="logo-transparent.png" alt="شعار المدرسة" style="height:80px;">
+                    <h2>وزارة التربية والتعليم</h2>
+                    <h3>المملكة الأردنية الهاشمية</h3>
+                    <h3>مدرسة اسكان المالية والزراعة الأساسية الثانية للبنين</h3>
+                    <p>المديرية: لواء القويسمة</p>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin:20px 0;">
+                    <p><strong>اسم الطالب:</strong> ${student.n}</p>
+                    <p><strong>الصف:</strong> ${grade} ${cls}</p>
+                </div>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>المبحث</th>
+                            <th>الشهر الأول</th>
+                            <th>الشهر الثاني</th>
+                            <th>الشهر الثالث</th>
+                            <th>الشهر الرابع</th>
+                            <th>المعدل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${subjects.map(s => `
+                            <tr>
+                                <td>${s.name}</td>
+                                <td>${s.m1}</td>
+                                <td>${s.m2}</td>
+                                <td>${s.m3}</td>
+                                <td>${s.m4}</td>
+                                <td><strong>${s.avg}</strong></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div style="margin: 20px 0; text-align:center;">
+                    <p><strong>المعدل العام: ${overallAvg}%</strong></p>
+                    <p>النتيجة: ${overallAvg >= 50 ? 'ناجح' : 'مكمل'}</p>
+                </div>
+                <div class="signatures">
+                    <div>
+                        <p>${teacherName}</p>
+                        <hr><small>توقيع مربي الصف</small>
+                    </div>
+                    <div>
+                        <p>د/ أسامة حمدان الرقب</p>
+                        <hr><small>مدير المدرسة</small>
+                    </div>
+                    <div>
+                        <p>________________</p>
+                        <hr><small>الخاتم الرسمي</small>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const opt = {
+            margin:       0,
+            filename:     `شهادة_${student.n}_${grade}_${cls}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        await html2pdf().set(opt).from(html).save();
+    },
+
+    // للطالب نفسه
+    async downloadStudentOwnReport() {
+        await this.exportStudentReportPDF(this.user, this.user.grade, this.user.c);
     },
 
     renderTeacherSubjectsTab() {
@@ -1232,15 +1331,16 @@ const app = {
         if (!div) return;
         const students = this.db.systemUsers.filter(u => u.r === 'student' && u.grade === grade && u.c === cls);
         if (!students.length) { div.innerHTML = "<p>لا يوجد طلاب في هذه الشعبة</p>"; return; }
-        let html = `<table class="main-table"><thead><tr><th>الطالب</th><th>ش1</th><th>ش2</th><th>ش3</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>`;
+        let html = `<table class="main-table"><thead><tr><th>الطالب</th><th>ش1</th><th>ش2</th><th>ش3</th><th>ش4</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>`;
         students.forEach(s => {
-            const g = (this.db.grades[s.s] && this.db.grades[s.s][subject]) ? this.db.grades[s.s][subject] : {m1:0, m2:0, m3:0, fin:0};
-            const total = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.fin)||0);
+            const g = (this.db.grades[s.s] && this.db.grades[s.s][subject]) ? this.db.grades[s.s][subject] : {m1:0, m2:0, m3:0, m4:0, fin:0};
+            const total = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.m4)||0)+(Number(g.fin)||0);
             html += `<tr data-sid="${s.s}" data-subject="${subject}">
                         <td>${s.n}</td>
                         <td><input type="number" class="grade-input m1" value="${g.m1}" oninput="app.calcRowTotal(this)"></td>
                         <td><input type="number" class="grade-input m2" value="${g.m2}" oninput="app.calcRowTotal(this)"></td>
                         <td><input type="number" class="grade-input m3" value="${g.m3}" oninput="app.calcRowTotal(this)"></td>
+                        <td><input type="number" class="grade-input m4" value="${g.m4}" oninput="app.calcRowTotal(this)"></td>
                         <td><input type="number" class="grade-input fin" value="${g.fin}" oninput="app.calcRowTotal(this)"></td>
                         <td class="row-total">${total}</td>
                     </tr>`;
@@ -1253,8 +1353,9 @@ const app = {
         const m1 = Number(row.querySelector('.m1').value) || 0;
         const m2 = Number(row.querySelector('.m2').value) || 0;
         const m3 = Number(row.querySelector('.m3').value) || 0;
+        const m4 = Number(row.querySelector('.m4').value) || 0;
         const fin = Number(row.querySelector('.fin').value) || 0;
-        row.querySelector('.row-total').innerText = m1 + m2 + m3 + fin;
+        row.querySelector('.row-total').innerText = m1 + m2 + m3 + m4 + fin;
     },
 
     async saveAllGrades() {
@@ -1271,10 +1372,11 @@ const app = {
             const m1 = row.querySelector('.m1').value || 0;
             const m2 = row.querySelector('.m2').value || 0;
             const m3 = row.querySelector('.m3').value || 0;
+            const m4 = row.querySelector('.m4').value || 0;
             const fin = row.querySelector('.fin').value || 0;
             if (!this.db.grades[sid]) this.db.grades[sid] = {};
-            this.db.grades[sid][subject] = { m1, m2, m3, fin };
-            await this.upsertGrade(sid, subject, m1, m2, m3, fin);
+            this.db.grades[sid][subject] = { m1, m2, m3, m4, fin };
+            await this.upsertGrade(sid, subject, m1, m2, m3, m4, fin);
         }
         this.addNotif('class', grade + '-' + cls, `تم رصد علامات ${subject} لـ ${grade} ${cls}`);
         this.showToast("تم حفظ العلامات بنجاح", "success");
@@ -1323,45 +1425,20 @@ const app = {
         const div = document.getElementById('student-grades-display');
         if (!div) return;
         const myGrades = this.db.grades[this.user.s] || {};
-        let html = `<h3>📊 كشف علاماتي</h3><table class="main-table"><thead><tr><th>المادة</th><th>ش1</th><th>ش2</th><th>ش3</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>`;
+        let html = `<h3>📊 كشف علاماتي</h3><table class="main-table"><thead><tr><th>المادة</th><th>ش1</th><th>ش2</th><th>ش3</th><th>ش4</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>`;
         let totalSum = 0, count = 0;
         for (let sub in myGrades) {
             const g = myGrades[sub];
-            const t = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.fin)||0);
-            html += `<tr><td>${sub}</td><td>${g.m1||0}</td><td>${g.m2||0}</td><td>${g.m3||0}</td><td>${g.fin||0}</td><td style="font-weight:bold">${t}</td></tr>`;
+            const t = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.m4)||0)+(Number(g.fin)||0);
+            html += `<tr><td>${sub}</td><td>${g.m1||0}</td><td>${g.m2||0}</td><td>${g.m3||0}</td><td>${g.m4||0}</td><td>${g.fin||0}</td><td style="font-weight:bold">${t}</td></tr>`;
             totalSum += t; count++;
         }
-        if (count === 0) html += `<tr><td colspan="6" style="color:#888;">لا توجد علامات</td></tr></tbody></table>`;
+        if (count === 0) html += `<tr><td colspan="7" style="color:#888;">لا توجد علامات</td></tr></tbody></table>`;
         else {
             const percentage = ((totalSum / (count * 100)) * 100).toFixed(1);
-            html += `</tbody></table><div style="margin-top:15px; background:#eef2f5; padding:10px; border-radius:12px; text-align:center;">📈 المعدل المئوي: ${percentage}% <button onclick="app.downloadStudentOwnReport()" style="background:var(--primary-dark); color:white; border:none; padding:6px 12px; border-radius:20px;">📥 تحميل</button></div>`;
+            html += `</tbody></table><div style="margin-top:15px; background:#eef2f5; padding:10px; border-radius:12px; text-align:center;">📈 المعدل المئوي: ${percentage}% <button onclick="app.downloadStudentOwnReport()" style="background:var(--primary-dark); color:white; border:none; padding:6px 12px; border-radius:20px;">📥 تحميل الشهادة PDF</button></div>`;
         }
         div.innerHTML = html;
-    },
-
-    downloadStudentOwnReport() {
-        const student = this.user;
-        const grades = this.db.grades[student.s] || {};
-        let subjects = [], totalSum = 0;
-        for (let sub in grades) {
-            const g = grades[sub];
-            const t = (Number(g.m1)||0)+(Number(g.m2)||0)+(Number(g.m3)||0)+(Number(g.fin)||0);
-            totalSum += t;
-            subjects.push({ name: sub, m1: g.m1, m2: g.m2, m3: g.m3, fin: g.fin, total: t });
-        }
-        const percentage = subjects.length ? (totalSum/(subjects.length*100)*100).toFixed(1) : 0;
-        const teacherId = this.db.classTeachers[student.grade]?.[student.c];
-        const teacher = teacherId ? this.db.systemUsers.find(u=>u.s===teacherId) : null;
-        const teacherName = teacher ? teacher.n : "________________";
-        const html = `<div style="padding:20px; font-family:'Segoe UI'; max-width:700px; margin:auto; border:2px solid #000;">
-            <div style="text-align:center;"><h2>مدرسة اسكان المالية والزراعة</h2><h3>مدير المدرسة: د/ أسامة حمدان الرقب</h3><h3>كشف العلامات - الفصل الثاني</h3><p>العام الدراسي 2025/2026</p></div>
-            <div><p><b>اسم الطالب:</b> ${student.n} - <b>الصف:</b> ${student.grade} <b>الشعبة:</b> ${student.c}</p></div>
-            <table border="1" width="100%"><thead><tr><th>المادة</th><th>ش1</th><th>ش2</th><th>ش3</th><th>نهائي</th><th>المجموع</th></tr></thead><tbody>${subjects.map(s=>`<tr><td>${s.name}</td><td>${s.m1||0}</td><td>${s.m2||0}</td><td>${s.m3||0}</td><td>${s.fin||0}</td><td style="font-weight:bold">${s.total}</td></tr>`).join('')}</tbody></table>
-            <div><p><b>المعدل التراكمي: ${percentage}%</b></p></div>
-            <div><p>${teacherName}</p><hr><small>توقيع مربي الصف</small></div>
-        </div>`;
-        const win = window.open('', '_blank');
-        if (win) { win.document.write(`<html dir="rtl"><head><title>تقرير علاماتي</title></head><body>${html}</body></html>`); win.document.close(); win.print(); }
     },
 
     renderStudentHomeworks() {
@@ -1875,6 +1952,32 @@ const app = {
                 if (index !== null) this.showMessageContext(e, parseInt(index));
             }
         };
+    },
+
+    // ==================== الإشعارات اللحظية (Realtime) ====================
+    enableRealtime() {
+        supabase
+            .channel('public-changes')
+            .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+                this.handleRealtimeChange(payload);
+            })
+            .subscribe();
+    },
+
+    handleRealtimeChange(payload) {
+        const table = payload.table;
+        if (table === 'messages' && this.activeChat) {
+            if (payload.eventType === 'INSERT') {
+                this.getCurrentChatMessages().push(payload.new);
+                this.renderMessages();
+            }
+        } else if (table === 'notifications') {
+            this.db.notifs.unshift(payload.new);
+            this.updateBellCount();
+            this.renderNotifsList();
+        } else if (table === 'homeworks') {
+            if (this.user.r === 'student') this.renderStudentHomeworks();
+        }
     }
 };
 
