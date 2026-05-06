@@ -853,23 +853,36 @@ body.dark #group-list div[style*="background:#eef2f5"] {
     }
 }
 
-/* ========== حركات التبديل بين الألسنة ========== */
+/* ========== حركات التبديل بين الألسنة (محسّنة) ========== */
 main section, .admin-sub-tab {
     transition: opacity 0.25s ease, transform 0.25s ease;
+    position: absolute;        /* جميع الأقسام فوق بعضها */
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;      /* لا تستقبل نقر إلا عند الظهور */
 }
+
 main section:not(.hidden), .admin-sub-tab:not(.hidden) {
     opacity: 1;
     transform: translateY(0);
+    pointer-events: auto;
+    position: relative;        /* القسم الظاهر يكون في التدفق الطبيعي */
+    z-index: 1;
 }
+
 main section.hidden, .admin-sub-tab.hidden {
     opacity: 0;
     transform: translateY(10px);
     pointer-events: none;
-    position: absolute; /* حتى لا تأخذ مساحة */
-    width: 100%;
+    position: absolute;        /* المخفي بكون مكدّس بدون تأثير */
+    z-index: 0;
 }
+
+/* تأكد أن المحتوى الأساسي يسمح بالتراكب */
 #content-area {
     position: relative;
+    min-height: 100vh;         /* حتى لا ينهار لو كان فارغاً */
 }
 /* تجميع رسائل الشات */
 .message.same-sender {
