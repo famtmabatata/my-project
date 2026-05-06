@@ -1,3 +1,23 @@
+/* إزالة أي مسافات افتراضية */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+/* تأكيد عدم وجود فراغ في أعلى صفحة تسجيل الدخول */
+#login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* تأكيد عدم وجود فراغ في أعلى النظام الرئيسي */
+#main-system {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+}
 /* ========== المتغيرات العامة والثيم (فاتح/داكن) ========== */
 :root {
     --primary-dark: #0f4c5c;
