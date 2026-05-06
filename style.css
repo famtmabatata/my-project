@@ -18,6 +18,7 @@ html, body {
     padding: 0;
     height: 100vh;
 }
+
 /* ========== المتغيرات العامة والثيم (فاتح/داكن) ========== */
 :root {
     --primary-dark: #0f4c5c;
@@ -884,10 +885,120 @@ main section.hidden, .admin-sub-tab.hidden {
     position: relative;
     min-height: 100vh;         /* حتى لا ينهار لو كان فارغاً */
 }
+
 /* تجميع رسائل الشات */
 .message.same-sender {
     margin-top: -10px;
 }
 .message.same-sender .bubble {
     border-radius: 20px 20px 20px 4px; /* تعديل بسيط في الحواف */
+}
+
+/* ========== تنسيقات المودال الجديد (تعديل الجدول) ========== */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10003;
+}
+
+.modal-overlay .modal-content {
+    background: var(--bg-card);
+    padding: 20px;
+    border-radius: 16px;
+    min-width: 280px;
+    text-align: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.modal-overlay input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    background: var(--bg-body);
+    color: var(--text-main);
+    font-size: 1rem;
+}
+
+/* ========== تنسيقات شهادة PDF (مطابقة للوزارة) ========== */
+.report-card-pdf {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm;
+    margin: 0 auto;
+    background: white;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    box-sizing: border-box;
+    color: #000;
+}
+
+.report-card-pdf .header {
+    text-align: center;
+    border-bottom: 3px double #000;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.report-card-pdf .header img {
+    height: 80px;
+    margin-bottom: 10px;
+}
+
+.report-card-pdf h2, .report-card-pdf h3 {
+    margin: 5px 0;
+    color: #000;
+}
+
+.report-card-pdf table.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.report-card-pdf table.report-table th,
+.report-card-pdf table.report-table td {
+    border: 1px solid black;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    color: #000;
+}
+
+.report-card-pdf .signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 50px;
+}
+
+.report-card-pdf .signatures div {
+    text-align: center;
+    width: 30%;
+}
+
+.report-card-pdf .signatures hr {
+    width: 80%;
+    margin: 5px auto;
+    border-top: 1px solid #000;
+}
+
+/* عند الطباعة المباشرة (بدون PDF) نخفي باقي الصفحة */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .report-card-pdf, .report-card-pdf * {
+        visibility: visible;
+    }
+    .report-card-pdf {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
 }
