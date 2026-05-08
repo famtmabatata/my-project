@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>نظام مدرسة اسكان المالية والزراعة الأساسية الثانية للبنين 🔐</title>
+    
+    <link rel="icon" type="image/png" href="logo-transparent.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#003F5C">
+    
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome 6 (أيقونات متجهة) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* أي ستايلات إضافية مؤقتة - سيتم دمجها في style.css */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة البداية Splash Screen (مخفية في البداية، تظهر بعد تسجيل الدخول) -->
+    <div id="splash-screen" class="hidden">
+        <div class="splash-content">
+            <img src="logo-transparent.png" alt="شعار المدرسة" class="splash-logo">
+            <h1 class="splash-title">مدرسة اسكان المالية والزراعة</h1>
+            <p class="splash-subtitle">الأساسية الثانية للبنين</p>
+            <div class="loading-bar"></div>
+            <div class="splash-percent">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <!-- شريط تقدم التمرير -->
+    <div id="reading-progress"></div>
+
+    <div id="toast-container"></div>
+
+    <div id="confirm-modal" class="hidden">
+        <div class="modal-content">
+            <p id="confirm-message">هل أنت متأكد؟</p>
+            <button class="btn-confirm" id="confirm-yes">نعم</button>
+            <button class="btn-cancel" id="confirm-no">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- طبقة الموجات للخلفية المتحركة -->
+    <div class="wave-bg"></div>
+
+    <!-- صفحة تسجيل الدخول -->
+    <div id="login-page">
+        <div class="login-container">
+            <div class="login-card glass-card">
+                <div class="school-logo">
+                    <img src="logo-transparent.png" alt="شعار المدرسة">
+                </div>
+                <h1 class="login-title">مدرسة اسكان المالية والزراعة<br>الأساسية الثانية للبنين</h1>
+                <div class="principal-name">المدير: د/ أسامة حمدان الرقب</div>
+                <div class="login-inputs">
+                    <div class="input-icon-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="serial" placeholder="الرقم التسلسلي">
+                    </div>
+                    <div class="input-icon-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="pass" placeholder="كلمة المرور">
+                        <span class="toggle-password" onclick="app.togglePasswordVisibility()">👁️</span>
+                    </div>
+                    <div id="login-error" class="login-error hidden"></div>
+                    <button id="login-btn" class="ripple-btn">دخول</button>
+                </div>
+                <div class="login-footer">نظام إلكتروني متكامل</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- النظام الرئيسي -->
+    <div id="main-system" class="hidden">
+        <aside id="sidebar">
+            <div class="side-header">
+                <div class="school-logo-mini">
+                    <img src="logo-transparent.png" alt="شعار">
+                </div>
+                <div id="user-pfp-container"></div>
+                <h2 id="display-name">...</h2>
+                <div id="display-role" class="user-role"></div>
+                <div class="school-info-side">مدرسة اسكان المالية والزراعة</div>
+                <div class="principal-side">المدير: د/ أسامة حمدان الرقب</div>
+            </div>
+            <nav>
+                <button onclick="app.switchTab('schedule')"><i class="fas fa-calendar-alt"></i> <span>الجدول والواجبات</span></button>
+                <button id="teacher-tab" class="hidden" onclick="app.switchTab('teacher')"><i class="fas fa-chalkboard-teacher"></i> <span>لوحة المعلم</span></button>
+                <button id="admin-tab" class="hidden" onclick="app.switchTab('admin')"><i class="fas fa-shield-alt"></i> <span>لوحة المدير</span></button>
+                <button onclick="app.switchTab('chat')"><i class="fas fa-comments"></i> <span>المحادثات</span></button>
+            </nav>
+        </aside>
+
+        <main>
+            <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 20px;">
+                <button class="hamburger-menu" onclick="app.toggleSidebar()">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="notif-wrapper">
+                    <div class="notif-bell" onclick="app.toggleNotifs(event)">
+                        🔔 <span id="bell-count">0</span>
+                    </div>
+                    <div id="notif-dropdown" class="hidden">
+                        <h4 style="margin:0 0 10px 0; border-bottom:1px solid var(--border-light); padding-bottom:5px;">🔔 الإشعارات الأخيرة</h4>
+                        <div id="notif-list" style="max-height: 250px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="theme-toggle" id="themeToggleBtn" onclick="app.toggleTheme()">🌙</button>
+                    <button onclick="location.reload()" style="background:#dc3545; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">تسجيل الخروج</button>
+                </div>
+            </header>
+
+            <div id="content-area">
+                <section id="tab-schedule">
+                    <div class="card">
+                        <h2 style="color:var(--primary-dark)">📅 جدول الحصص الأسبوعي</h2>
+                        <div id="schedule-table-container" style="overflow-x:auto;"></div>
+                    </div>
+                </section>
+                <section id="tab-teacher" class="hidden">
+                    <div id="grades-table-container"></div>
+                </section>
+                <section id="tab-admin" class="hidden">
+                    <div id="admin-main-container"></div>
+                </section>
+                <section id="tab-chat" class="hidden">
+                    <div class="chat-container">
+                        <div class="chat-sidebar" id="group-list"></div>
+                        <div class="chat-main-area">
+                            <div id="chat-header">اختر محادثة لبدء الدردشة <span id="typing-indicator" style="color:#FFD54F; font-size:0.85rem; display:none;"></span></div>
+                            <div id="chat-box"></div>
+                            <div id="reply-preview" style="display:none;"></div>
+                            <div id="image-preview-area"></div>
+                            <div class="chat-input-area" style="position: relative;">
+                                <input type="text" id="chat-msg" placeholder="اكتب رسالة...">
+                                <input type="file" id="chat-image-input" accept="image/*" multiple style="display:none;" onchange="app.handleFileSelection(this.files)">
+                                <button class="chat-image-btn" onclick="document.getElementById('chat-image-input').click()">📷</button>
+                                <button id="emoji-btn" class="chat-image-btn" onclick="app.toggleEmojiPicker()">😊</button>
+                                <button onclick="app.sendMessage()">إرسال</button>
+                                <div id="emoji-picker" class="hidden"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <nav class="mobile-nav" id="mobile-nav">
+            <button onclick="app.switchTab('schedule')"><i class="fas fa-calendar-alt"></i></button>
+            <button onclick="app.switchTab('chat')"><i class="fas fa-comments"></i></button>
+            <button id="mobile-admin-btn" class="hidden" onclick="app.switchTab('admin')"><i class="fas fa-shield-alt"></i></button>
+            <button id="mobile-teacher-btn" class="hidden" onclick="app.switchTab('teacher')"><i class="fas fa-chalkboard-teacher"></i></button>
+            <button id="mobile-more-btn" class="hidden" onclick="app.toggleMobileMoreMenu()">⋯</button>
+            <div id="mobile-more-menu" class="hidden" style="position:absolute; bottom:60px; right:10px; background:var(--bg-card); border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); padding:10px; display:flex; flex-direction:column; gap:5px; z-index:1001;"></div>
+        </nav>
+    </div>
+
+    <!-- مودال الصورة المكبرة -->
+    <div id="image-modal" class="hidden" onclick="this.classList.add('hidden')" style="
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 9999; display: flex;
+        justify-content: center; align-items: center;
+    ">
+        <img id="modal-img" style="max-width: 90%; max-height: 90%; border-radius: 10px;" />
+    </div>
+
+    <!-- طبقة التحميل لرفع الصور -->
+    <div id="upload-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; justify-content:center; align-items:center; flex-direction:column;">
+        <div class="loader"></div>
+        <p class="progress-text" style="color:white; margin-top:15px;">جاري رفع الصور...</p>
+    </div>
+
+    <script src="config.js"></script>
+    <script type="module" src="core.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(e => console.log('SW skipped', e));
+        }
+    </script>
+</body>
+</html>
